@@ -6,7 +6,9 @@ import (
 	"fmt"
 	vmwcommon "github.com/mitchellh/packer/builder/vmware/common"
 	"github.com/mitchellh/packer/common"
+  "github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
+  "github.com/mitchellh/packer/template/interpolate"
 	"os/exec"
 	"strings"
 )
@@ -18,29 +20,30 @@ type Config struct {
 	TargetPath          string `mapstructure:"target"`
 	TargetType          string `mapstructure:"format"`
 	Compression         uint   `mapstructure:"compression"`
-	tpl                 *packer.ConfigTemplate
+	ctx                 interpolate.Context
 }
 
 type OVFPostProcessor struct {
 	cfg Config
 }
 
-type OutputPathTemplate struct {
+type outputPathTemplate struct {
 	ArtifactId string
 	BuildName  string
 	Provider   string
 }
 
 func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
-	_, err := common.DecodeConfig(&p.cfg, raws...)
+  err := config.Decode(&p.cfg, &config.DecodeOpts{
+    Interpolate: true,
+    InterpolateContext: &p.cfg.ctx,
+    InterpolateFilter: &interpolate.RenderFilter{
+      Exclude: []string{},
+    },
+  }, raws...)
 	if err != nil {
 		return err
 	}
-	p.cfg.tpl, err = packer.NewConfigTemplate()
-	if err != nil {
-		return err
-	}
-	p.cfg.tpl.UserVars = p.cfg.PackerUserVars
 
 	if p.cfg.TargetType == "" {
 		p.cfg.TargetType = "ovf"
@@ -53,6 +56,8 @@ func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
 		}
 	}
 
+  p.cfg.ctx.UserVariables = p.cfg.PackerUserVars
+
 	errs := new(packer.MultiError)
 
 	_, err = exec.LookPath(executable)
@@ -61,7 +66,7 @@ func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
 			errs, fmt.Errorf("Error: Could not find ovftool executable: %s", err))
 	}
 
-	if err = p.cfg.tpl.Validate(p.cfg.TargetPath); err != nil {
+	if err := interpolate.Validate(p.cfg.TargetPath, &p.cfg.ctx); err != nil {
 		errs = packer.MultiErrorAppend(
 			errs, fmt.Errorf("Error parsing target template: %s", err))
 	}
@@ -124,14 +129,15 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 		return nil, false, fmt.Errorf("Couldn't strip floppy/DVD drives from VMX")
 	}
 
-	targetPath, err := p.cfg.tpl.Process(p.cfg.TargetPath, &OutputPathTemplate{
-		ArtifactId: artifact.Id(),
-		BuildName:  p.cfg.PackerBuildName,
-		Provider:   "vmware",
-	})
-	if err != nil {
-		return nil, false, err
-	}
+  p.cfg.ctx.Data = &outputPathTemplate{
+    ArtifactId: artifact.Id(),
+    BuildName: p.cfg.PackerBuildName,
+    Provider: artifact.BuilderId(),
+  }
+  outputPath, err := interpolate.Render(p.cfg.TargetPath, &p.cfg.ctx)
+  if err != nil {
+    return nil, false, err
+  }
 
 	// build the arguments
 	args := []string{
@@ -145,7 +151,7 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 	}
 
 	// add the source/target
-	args = append(args, vmx, targetPath)
+	args = append(args, vmx, outputPath)
 
 	ui.Message(fmt.Sprintf("Executing ovftool with arguments: %+v", args))
 	cmd := exec.Command(executable, args...)
