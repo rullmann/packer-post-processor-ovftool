@@ -38,7 +38,9 @@ func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
     Interpolate: true,
     InterpolateContext: &p.cfg.ctx,
     InterpolateFilter: &interpolate.RenderFilter{
-      Exclude: []string{},
+      Exclude: []string{
+        "target",
+      },
     },
   }, raws...)
 	if err != nil {
@@ -132,7 +134,7 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
   p.cfg.ctx.Data = &outputPathTemplate{
     ArtifactId: artifact.Id(),
     BuildName: p.cfg.PackerBuildName,
-    Provider: artifact.BuilderId(),
+    Provider: p.cfg.PackerBuilderType,
   }
   outputPath, err := interpolate.Render(p.cfg.TargetPath, &p.cfg.ctx)
   if err != nil {
