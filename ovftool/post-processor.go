@@ -19,6 +19,7 @@ type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	TargetPath	  string `mapstructure:"target"`
 	TargetType	  string `mapstructure:"format"`
+	BuildName	  string `mapstructure:"buildname"`
 	Compression	 uint   `mapstructure:"compression"`
 	ctx interpolate.Context
 }
