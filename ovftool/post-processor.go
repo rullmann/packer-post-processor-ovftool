@@ -18,7 +18,7 @@ type Config struct {
 	TargetPath          string `mapstructure:"target"`
 	TargetType          string `mapstructure:"format"`
 	Compression         uint   `mapstructure:"compression"`
-	tpl                 *packer.ConfigTemplate
+	ctx                 interpolate.Context
 }
 
 type OVFPostProcessor struct {
