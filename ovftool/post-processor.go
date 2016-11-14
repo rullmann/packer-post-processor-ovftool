@@ -8,7 +8,6 @@ import (
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/template/interpolate"
 	"os/exec"
 	"strings"
@@ -153,7 +152,7 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 	}
 
 	// add the source/target
-	args = append(args, vmx, outputPath)
+	args = append(args, vmx, targetPath)
 
 	ui.Message(fmt.Sprintf("Executing ovftool with arguments: %+v", args))
 	cmd := exec.Command(executable, args...)
