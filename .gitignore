@@ -21,3 +21,4 @@ _testmain.go
 
 *.exe
 packer-post-processor-ovftool
+dist/
