@@ -35,22 +35,9 @@ Installation
 ------------
 Run:
 
-    $ go get github.com/iancmcc/packer-post-processor-ovftool
-    $ go install github.com/iancmcc/packer-post-processor-ovftool
+    $ go get github.com/drscream/packer-post-processor-ovftool
+    $ go install github.com/drscream/packer-post-processor-ovftool
 
-Add the post-processor to ~/.packerconfig:
+Copy the binary to `~/.packer.d/plugins/`:
 
-    {
-      "post-processors": {
-        "ovftool": "packer-post-processor-ovftool"
-      }
-    }
-
-### Packer API differences
-If you want to use the plugin with Packer v0.4, you'll need to build for API
-version 1. Perform installation as above (you can skip the "go install" step), then:
-
-    $ cd $GOPATH/src/github.com/iancmcc/packer-post-processor-ovftool && git checkout v0.4.1
-    $ cd $GOPATH/src/github.com/mitchellh/packer && git checkout v0.4.1
-    $ go install github.com/iancmcc/packer-post-processor-ovftool
-
+    $ cp ${GOPATH}/bin/packer-post-processor-ovftool ~/.packer.d/plugins/
