@@ -28,7 +28,7 @@ type OVFPostProcessor struct {
 	cfg Config
 }
 
-type outputPathTemplate struct {
+type OutputPathTemplate struct {
 	ArtifactId string
 	BuildName  string
 	Provider   string
