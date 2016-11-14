@@ -6,6 +6,7 @@ import (
 	"fmt"
 	vmwcommon "github.com/mitchellh/packer/builder/vmware/common"
 	"github.com/mitchellh/packer/common"
+  "github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/template/interpolate"
@@ -28,7 +29,7 @@ type OVFPostProcessor struct {
 	cfg Config
 }
 
-type OutputPathTemplate struct {
+type outputPathTemplate struct {
 	ArtifactId string
 	BuildName  string
 	Provider   string
@@ -56,6 +57,8 @@ func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
 			p.cfg.TargetPath += ".ova"
 		}
 	}
+
+  p.cfg.ctx.UserVariables = p.cfg.PackerUserVars
 
 	errs := new(packer.MultiError)
 
@@ -131,7 +134,7 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 	p.cfg.ctx.Data = &OutputPathTemplate{
 		ArtifactId: artifact.Id(),
 		BuildName:  p.cfg.BuildName,
-		Provider:   "vmware",
+		Provider:   p.cfg.PackerBuilderType,
 	}
 	targetPath, err := interpolate.Render(p.cfg.TargetPath, &p.cfg.ctx)
 	if err != nil {
@@ -150,7 +153,7 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 	}
 
 	// add the source/target
-	args = append(args, vmx, targetPath)
+	args = append(args, vmx, outputPath)
 
 	ui.Message(fmt.Sprintf("Executing ovftool with arguments: %+v", args))
 	cmd := exec.Command(executable, args...)
