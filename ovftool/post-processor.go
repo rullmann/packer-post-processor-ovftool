@@ -7,6 +7,8 @@ import (
 	vmwcommon "github.com/mitchellh/packer/builder/vmware/common"
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/packer"
+	"github.com/mitchellh/packer/helper/config"
+	"github.com/mitchellh/packer/template/interpolate"
 	"os/exec"
 	"strings"
 )
@@ -17,6 +19,7 @@ type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	TargetPath          string `mapstructure:"target"`
 	TargetType          string `mapstructure:"format"`
+	BuildName           string `mapstructure:"buildname"`
 	Compression         uint   `mapstructure:"compression"`
 	ctx                 interpolate.Context
 }
@@ -32,15 +35,16 @@ type OutputPathTemplate struct {
 }
 
 func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
-	_, err := common.DecodeConfig(&p.cfg, raws...)
+	err := config.Decode(&p.cfg, &config.DecodeOpts {
+		Interpolate:	true,
+		InterpolateContext: &p.cfg.ctx,
+		InterpolateFilter: &interpolate.RenderFilter {
+			Exclude: []string{},
+		},
+	}, raws...)
 	if err != nil {
 		return err
 	}
-	p.cfg.tpl, err = packer.NewConfigTemplate()
-	if err != nil {
-		return err
-	}
-	p.cfg.tpl.UserVars = p.cfg.PackerUserVars
 
 	if p.cfg.TargetType == "" {
 		p.cfg.TargetType = "ovf"
@@ -61,7 +65,7 @@ func (p *OVFPostProcessor) Configure(raws ...interface{}) error {
 			errs, fmt.Errorf("Error: Could not find ovftool executable: %s", err))
 	}
 
-	if err = p.cfg.tpl.Validate(p.cfg.TargetPath); err != nil {
+	if err = interpolate.Validate(p.cfg.TargetPath, &p.cfg.ctx); err != nil {
 		errs = packer.MultiErrorAppend(
 			errs, fmt.Errorf("Error parsing target template: %s", err))
 	}
@@ -124,11 +128,12 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 		return nil, false, fmt.Errorf("Couldn't strip floppy/DVD drives from VMX")
 	}
 
-	targetPath, err := p.cfg.tpl.Process(p.cfg.TargetPath, &OutputPathTemplate{
+	p.cfg.ctx.Data = &OutputPathTemplate{
 		ArtifactId: artifact.Id(),
-		BuildName:  p.cfg.PackerBuildName,
+		BuildName:  p.cfg.BuildName,
 		Provider:   "vmware",
-	})
+	}
+	targetPath, err := interpolate.Render(p.cfg.TargetPath, &p.cfg.ctx)
 	if err != nil {
 		return nil, false, err
 	}
