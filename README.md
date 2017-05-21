@@ -35,8 +35,8 @@ Installation
 ------------
 Run:
 
-    $ go get github.com/drscream/packer-post-processor-ovftool
-    $ go install github.com/drscream/packer-post-processor-ovftool
+    $ go get github.com/rullmann/packer-post-processor-ovftool
+    $ go install github.com/rullmann/packer-post-processor-ovftool
 
 Copy the binary to `~/.packer.d/plugins/`:
 

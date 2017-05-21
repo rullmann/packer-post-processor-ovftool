@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/drscream/packer-post-processor-ovftool/ovftool"
-	"github.com/mitchellh/packer/packer/plugin"
+	"github.com/rullmann/packer-post-processor-ovftool/ovftool"
+	"github.com/hashicorp/packer/packer/plugin"
 )
 
 func main() {

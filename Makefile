@@ -18,7 +18,7 @@ help:
 	@echo "help      show this page"
 
 .depend:
-	go get -d github.com/mitchellh/packer
+	go get -d github.com/hashicorp/packer
 
 clean:
 	go clean -x
