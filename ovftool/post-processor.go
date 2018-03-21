@@ -111,7 +111,7 @@ func (p *OVFPostProcessor) stripDrives(vmx string) error {
 }
 
 func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, error) {
-	if artifact.BuilderId() != "hashicorp.vmware" {
+	if !strings.HasSuffix(artifact.BuilderId(), ".vmware") {
 		return nil, false, fmt.Errorf("ovftool post-processor can only be used on VMware boxes: %s", artifact.BuilderId())
 	}
 
