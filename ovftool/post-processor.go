@@ -144,6 +144,7 @@ func (p *OVFPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (
 	args := []string{
 		"--targetType=" + p.cfg.TargetType,
 		"--acceptAllEulas",
+		"--allowExtraConfig",
 	}
 
 	// append --compression, if it is set
